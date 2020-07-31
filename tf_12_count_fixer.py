@@ -51,25 +51,28 @@ def strip_vars(f: typing.TextIO) -> list:
     tmp_lst = []
     i = 0
     f.seek(0)
-    for line in f.readlines():
-        tmp_lst.append(line)
-        if line.startswith(tuple(ignore)):
-            # This assumes your .tf files have a contiguous block of variables
-            tmp_lst.pop()
-            break
-    for line in "".join(tmp_lst).splitlines():
-        if line.startswith("variable"):
-            break
-        while not line.startswith("variable"):
-            i += 1
-            break
-    del tmp_lst[:i]
-    # Remove trailing newline if it got pulled in
-    if "".join(tmp_lst[-1:]).isspace():
-        del tmp_lst[-1:]
-    # And add a newline to the head for any existing entries
-    if not "".join(tmp_lst[0]).isspace():
-        tmp_lst.insert(0, "\n")
+    try:
+        for line in f.readlines():
+            tmp_lst.append(line)
+            if line.startswith(tuple(ignore)):
+                # This assumes your .tf files have a contiguous block of variables
+                tmp_lst.pop()
+                break
+        for line in "".join(tmp_lst).splitlines():
+            if line.startswith("variable"):
+                break
+            while not line.startswith("variable"):
+                i += 1
+                break
+        del tmp_lst[:i]
+        # Remove trailing newline if it got pulled in
+        if "".join(tmp_lst[-1:]).isspace():
+            del tmp_lst[-1:]
+        # And add a newline to the head for any existing entries
+        if not "".join(tmp_lst[0]).isspace():
+            tmp_lst.insert(0, "\n")
+    except IndexError:
+        print("INFO: No variables found in " + f.name)
     return tmp_lst
 
 def write_var_file(f: typing.TextIO, var_lst: list) -> None:
