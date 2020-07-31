@@ -4,7 +4,7 @@
 ### WARNING: I AM IN NO WAY RESPONSIBLE IF YOU RUN THIS WITHOUT VERSION CONTROL AND THEN BREAK YOUR INFRASTRUCTURE.
 
 #### Who this is for:
-Anyone who needs to upgrade a large amount of Terraform <= 0.11 into 0.12-compliant HCL, but doesn't want to manually find and rename variables.
+Anyone who needs to upgrade a large amount of Terraform <= 0.11 into 0.12-compliant HCL, but doesn't want to manually find and rename variables, specifically within modules. If you haven't used `count` as a variable name for modules, you can just use standard search-and-replace within your editor.
 
 #### What it does do:
 1. Replaces [reserved word\[s\]](https://www.terraform.io/docs/configuration/variables.html#declaring-an-input-variable) in Terraform files in preparation for 0.12.
