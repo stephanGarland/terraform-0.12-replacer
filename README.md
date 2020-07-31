@@ -21,3 +21,10 @@ Anyone who needs to upgrade a large amount of Terraform <= 0.11 into 0.12-compli
 #### Requirements:
 1. Version - Python 3.x. Tested with 3.7.7, but it should probably work with anything 3.5+, as I'm using type hints. If you want to strip those out, it will probably work with 3.x, maybe 2.7. I have no interest in backporting it to 2.7 if it doesn't work.
 2. OS - It _should_ work on *nix and Windows. UNC paths on Windows would probably cause issues with os.path, but if you're accessing local files it should be fine. Developed on a Mac.
+
+#### Usage:
+From within whatever directory you wish to make changes, run this file. It will recurse into every subdirectory, so start small. It takes no args, but that is a potential feature to be added.
+
+#### Known Issues:
+1. Modules referencing `count` but specifying a different variable name, such as `consul_count` (i.e. if your .tf file has multiple modules, which are using different variables to keep track of resource count), this will not make changes.
+2. This does not alert you to all issues, only some. It is expected that you will carefully check your diff prior to usage, although heavy reliance is also being made on the fact that if something gets garbled, Terraform will be unable to parse the file, and will alert you. A potential optional feature is to add all-or-nothing writes, i.e. if one function fails, roll back all changes.
