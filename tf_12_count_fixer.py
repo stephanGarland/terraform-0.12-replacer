@@ -135,19 +135,20 @@ for tf_file in tf_files:
     # Regex modules and write the file
     try:
         with open(tf_file, "r+") as f:
-            count_regex_func(f)
-            tf_vars = strip_vars(f)
-            # User is already informed in strip_vars() if a file doesn't have variables to move
-            if tf_vars:
-                # Trim leading whitespace if it exists
-                if tf_vars[0] == "\n":
-                    del tf_vars[0]
-                write_var_file(f, tf_vars)
-                remove_vars_from_main(f, tf_vars)
-            # Here is where I would be using var_regex_sub if I didn't suck at regexes
-            #whole_file = f.read()
-            #f.seek(0)
-            #repl_vars = re.sub(var_regex, var_regex_sub, whole_file, 0, re.MULTILINE)
+            if ".terragrunt-cache" not in f.name:
+                count_regex_func(f)
+                tf_vars = strip_vars(f)
+                # User is already informed in strip_vars() if a file doesn't have variables to move
+                if tf_vars:
+                    # Trim leading whitespace if it exists
+                    if tf_vars[0] == "\n":
+                        del tf_vars[0]
+                    write_var_file(f, tf_vars)
+                    remove_vars_from_main(f, tf_vars)
+                # Here is where I would be using var_regex_sub if I didn't suck at regexes
+                #whole_file = f.read()
+                #f.seek(0)
+                #repl_vars = re.sub(var_regex, var_regex_sub, whole_file, 0, re.MULTILINE)
 
     except IOError as e:
         print(os.strerror(e))
