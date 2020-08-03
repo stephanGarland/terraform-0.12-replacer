@@ -35,13 +35,13 @@ COUNT_REPLACEMENT_WORD = "num"
 #     count  = "${var.count}"                                                                        <-- Groups 3 and 4
 # }
 
-def count_regex_func(f: typing.TextIO) -> None:
+def rename_count_regex(f: typing.TextIO) -> None:
     count_regex = r"(^module.+\n+)([\S\s].+)?(\s+(?=count))(count)"
     count_regex_sub = r"\1\2\3" + COUNT_REPLACEMENT_WORD
     count_var_regex = r"(var\.count)"
     count_var_regex_sub = "var." + COUNT_REPLACEMENT_WORD
-    whole_file = f.read()
-    repl_count = re.sub(count_regex, count_regex_sub, whole_file, 0, re.MULTILINE)
+    tf_file = f.read()
+    repl_count = re.sub(count_regex, count_regex_sub, tf_file, 0, re.MULTILINE)
     repl_count_var = re.sub(count_var_regex, count_var_regex_sub, repl_count, 0, re.MULTILINE)
     f.seek(0)
     f.write(repl_count_var)
@@ -85,16 +85,27 @@ def remove_vars_from_main(f: typing.TextIO, var_lst: list) -> None:
     # With variables written to a new file, remove them from the main file
     with open(f.name) as tmp_file:
         tf_file = tmp_file.read()
-        if "".join(var_lst) in tf_file:
-            tf_file = tf_file.replace("".join(tf_vars), "")
-            f.seek(0)
-            # Trim leading whitespace if it exists
-            if tf_file[0] == "\n":
-                tf_file = tf_file[1:]
-            f.write(tf_file)
-            f.truncate()
-        else:
-            print("ERROR: Unable to move variables out of " + f.name)
+    if "".join(var_lst) in tf_file:
+        tf_file = tf_file.replace("".join(tf_vars), "")
+        f.seek(0)
+        # Trim leading whitespace if it exists
+        if tf_file[0] == "\n":
+            tf_file = tf_file[1:]
+        f.write(tf_file)
+        f.truncate()
+    else:
+        print("ERROR: Unable to move variables out of " + f.name)
+
+
+def remove_required_version_regex(f: typing.TextIO) -> None:
+    with open(f.name) as tmp_file:
+        tf_file = tmp_file.read()
+    version_regex = r".*required_version.*<.*0\.12.*"
+    if re.findall(version_regex, tf_file):
+        repl_version = re.sub(version_regex, "", tf_file, 0, re.MULTILINE)
+        f.seek(0)
+        f.write(repl_version)
+        f.truncate()
 
 # NOTE: This is not implemented, as it - as regexes are wont to do - fails on edge cases
 # Variable regex explanation
@@ -135,9 +146,10 @@ for tf_file in tf_files:
     # Regex modules and write the file
     try:
         with open(tf_file, "r+") as f:
-            if ".terragrunt-cache" not in f.name:
-                count_regex_func(f)
+            if ((".terraform" not in f.name) and (".terragrunt_cache" not in f.name)) :
+                rename_count_regex(f)
                 tf_vars = strip_vars(f)
+                remove_required_version_regex(f)
                 # User is already informed in strip_vars() if a file doesn't have variables to move
                 if tf_vars:
                     # Trim leading whitespace if it exists
@@ -146,10 +158,10 @@ for tf_file in tf_files:
                     write_var_file(f, tf_vars)
                     remove_vars_from_main(f, tf_vars)
                 # Here is where I would be using var_regex_sub if I didn't suck at regexes
-                #whole_file = f.read()
+                #tf_file = f.read()
                 #f.seek(0)
-                #repl_vars = re.sub(var_regex, var_regex_sub, whole_file, 0, re.MULTILINE)
+                #repl_vars = re.sub(var_regex, var_regex_sub, tf_file, 0, re.MULTILINE)
 
     except IOError as e:
-        print(os.strerror(e))
+        raise
         sys.exit(1)
