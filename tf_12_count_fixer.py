@@ -76,10 +76,19 @@ def strip_vars(f: typing.TextIO) -> list:
     return tmp_lst
 
 def write_var_file(f: typing.TextIO, var_lst: list) -> None:
-    tf_file = f.read()
     with open(os.path.dirname(os.path.realpath(f.name)) + "/variables.tf", "a+") as var_file:
         # Write the variables to their own file, and replace "count" with the specified name
         var_file.write("".join(var_lst).replace("count", COUNT_REPLACEMENT_WORD))
+
+def rename_count_regex_in_var_file(f: typing.TextIO) -> None:
+    with open(os.path.dirname(os.path.realpath(f.name)) + "/variables.tf", "r+") as var_file:
+        tmp_file = var_file.read()
+        count_var_regex = r"variable \"count\""
+        count_var_regex_sub = "variable \"" + COUNT_REPLACEMENT_WORD + "\""
+        repl_count_var = re.sub(count_var_regex, count_var_regex_sub, tmp_file, 0, re.MULTILINE)
+        var_file.seek(0)
+        var_file.write(repl_count_var)
+        var_file.truncate()
 
 def remove_vars_from_main(f: typing.TextIO, var_lst: list) -> None:
     # With variables written to a new file, remove them from the main file
@@ -95,7 +104,6 @@ def remove_vars_from_main(f: typing.TextIO, var_lst: list) -> None:
         f.truncate()
     else:
         print("ERROR: Unable to move variables out of " + f.name)
-
 
 def remove_required_version_regex(f: typing.TextIO) -> None:
     with open(f.name) as tmp_file:
@@ -157,11 +165,15 @@ for tf_file in tf_files:
                         del tf_vars[0]
                     write_var_file(f, tf_vars)
                     remove_vars_from_main(f, tf_vars)
+                try:
+                    rename_count_regex_in_var_file(f)
+                except IOError:
+                    print("ERROR: No variable file found in " + os.path.dirname(os.path.realpath(f.name)))
                 # Here is where I would be using var_regex_sub if I didn't suck at regexes
                 #tf_file = f.read()
                 #f.seek(0)
                 #repl_vars = re.sub(var_regex, var_regex_sub, tf_file, 0, re.MULTILINE)
 
-    except IOError as e:
+    except IOError:
         raise
         sys.exit(1)
