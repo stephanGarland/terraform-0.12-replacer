@@ -146,7 +146,7 @@ for tf_file in tf_files:
     # Regex modules and write the file
     try:
         with open(tf_file, "r+") as f:
-            if ((".terraform" not in f.name) and (".terragrunt_cache" not in f.name)) :
+            if ((".terraform" not in f.name) and (".terragrunt-cache" not in f.name)) :
                 rename_count_regex(f)
                 tf_vars = strip_vars(f)
                 remove_required_version_regex(f)
