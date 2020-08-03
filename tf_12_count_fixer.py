@@ -88,10 +88,13 @@ def remove_vars_from_main(f: typing.TextIO, var_lst: list) -> None:
         if "".join(var_lst) in tf_file:
             tf_file = tf_file.replace("".join(tf_vars), "")
             f.seek(0)
+            # Trim leading whitespace if it exists
+            if tf_file[0] == "\n":
+                tf_file = tf_file[1:]
             f.write(tf_file)
             f.truncate()
         else:
-            print("ERROR: Unable to move variables out of main file, please do so manually")
+            print("ERROR: Unable to move variables out of " + f.name)
 
 # NOTE: This is not implemented, as it - as regexes are wont to do - fails on edge cases
 # Variable regex explanation
@@ -134,9 +137,13 @@ for tf_file in tf_files:
         with open(tf_file, "r+") as f:
             count_regex_func(f)
             tf_vars = strip_vars(f)
-            write_var_file(f, tf_vars)
-            remove_vars_from_main(f, tf_vars)
-
+            # User is already informed in strip_vars() if a file doesn't have variables to move
+            if tf_vars:
+                # Trim leading whitespace if it exists
+                if tf_vars[0] == "\n":
+                    del tf_vars[0]
+                write_var_file(f, tf_vars)
+                remove_vars_from_main(f, tf_vars)
             # Here is where I would be using var_regex_sub if I didn't suck at regexes
             #whole_file = f.read()
             #f.seek(0)
