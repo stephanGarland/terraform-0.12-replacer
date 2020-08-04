@@ -76,7 +76,8 @@ def strip_vars(f: typing.TextIO) -> list:
         if not "".join(tmp_lst[0]).isspace():
             tmp_lst.insert(0, "\n")
     except IndexError:
-        print("INFO: No variables found in " + f.name)
+        if len(sys.argv) > 1:
+            print("INFO: No variables found in " + f.name)
     return tmp_lst
 
 def write_var_file(f: typing.TextIO, var_lst: list) -> None:
@@ -97,8 +98,10 @@ def remove_vars_from_main(f: typing.TextIO, var_lst: list) -> None:
     # With variables written to a new file, remove them from the main file
     with open(f.name) as tmp_file:
         tf_file = tmp_file.read()
-    if "".join(var_lst) in tf_file:
-        tf_file = tf_file.replace("".join(tf_vars), "")
+    # strip_vars() already replaces the variable names as it's already using readlines
+    # Rather than running through the file again, just replace the original and pull it out
+    if "".join(var_lst).replace("num", "count") in tf_file:
+        tf_file = tf_file.replace("".join(var_lst).replace("num", "count"), "")
         f.seek(0)
         # Trim leading whitespace if it exists
         if tf_file[0] == "\n":
@@ -171,7 +174,8 @@ for tf_file in tf_files:
                 try:
                     rename_count_regex_in_var_file(f)
                 except IOError:
-                    print("ERROR: No variable file found in " + os.path.dirname(os.path.realpath(f.name)))
+                    if len(sys.argv) > 1:
+                        print("ERROR: No variable file found in " + os.path.dirname(os.path.realpath(f.name)))
 
     except IOError:
         raise
