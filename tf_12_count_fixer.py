@@ -36,7 +36,7 @@ COUNT_REPLACEMENT_WORD = "num"
 # }
 
 def rename_count_regex(f: typing.TextIO) -> None:
-    count_regex = r"(^module.+\n+)([\S\s]+)(\s+(?=count))(count)"
+    count_regex = r"(^module.+\n+)([\S\s].+)?(\s+(?=count))(count)"
     count_regex_sub = r"\1\2\3" + COUNT_REPLACEMENT_WORD
     count_var_regex = r"var\.count"
     count_var_regex_sub = "var." + COUNT_REPLACEMENT_WORD
