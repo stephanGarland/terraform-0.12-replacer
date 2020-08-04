@@ -38,7 +38,7 @@ COUNT_REPLACEMENT_WORD = "num"
 def rename_count_regex(f: typing.TextIO) -> None:
     count_regex = r"(^module.+\n+)([\S\s].+)?(\s+(?=count))(count)"
     count_regex_sub = r"\1\2\3" + COUNT_REPLACEMENT_WORD
-    count_var_regex = r"(var\.count)"
+    count_var_regex = r"var\.count"
     count_var_regex_sub = "var." + COUNT_REPLACEMENT_WORD
     tf_file = f.read()
     repl_count = re.sub(count_regex, count_regex_sub, tf_file, 0, re.MULTILINE)
@@ -50,10 +50,14 @@ def rename_count_regex(f: typing.TextIO) -> None:
 def strip_vars(f: typing.TextIO) -> list:
     tmp_lst = []
     i = 0
+    count_var_regex = r"\bcount\b"
+    count_var_regex_sub = COUNT_REPLACEMENT_WORD
     f.seek(0)
     try:
         for line in f.readlines():
-            tmp_lst.append(line)
+            # Changes var.count, but not var.count_of_consul, for example
+            repl_count_var = re.sub(count_var_regex, count_var_regex_sub, line, 0)
+            tmp_lst.append(repl_count_var)
             if line.startswith(tuple(ignore)):
                 # This assumes your .tf files have a contiguous block of variables
                 tmp_lst.pop()
@@ -77,8 +81,7 @@ def strip_vars(f: typing.TextIO) -> list:
 
 def write_var_file(f: typing.TextIO, var_lst: list) -> None:
     with open(os.path.dirname(os.path.realpath(f.name)) + "/variables.tf", "a+") as var_file:
-        # Write the variables to their own file, and replace "count" with the specified name
-        var_file.write("".join(var_lst).replace("count", COUNT_REPLACEMENT_WORD))
+        var_file.write("".join(var_lst))
 
 def rename_count_regex_in_var_file(f: typing.TextIO) -> None:
     with open(os.path.dirname(os.path.realpath(f.name)) + "/variables.tf", "r+") as var_file:
@@ -169,10 +172,6 @@ for tf_file in tf_files:
                     rename_count_regex_in_var_file(f)
                 except IOError:
                     print("ERROR: No variable file found in " + os.path.dirname(os.path.realpath(f.name)))
-                # Here is where I would be using var_regex_sub if I didn't suck at regexes
-                #tf_file = f.read()
-                #f.seek(0)
-                #repl_vars = re.sub(var_regex, var_regex_sub, tf_file, 0, re.MULTILINE)
 
     except IOError:
         raise
